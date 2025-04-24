@@ -47,14 +47,13 @@ func testAppendRead(t *testing.T, log *Log) {
 	read, err := log.Read(off)
 	require.NoError(t, err)
 	require.Equal(t, append.Value, read.Value)
-	require.NoError(t, log.Close())
 }
 
 func testOutOfRangeErr(t *testing.T, log *Log) {
 	read, err := log.Read(1)
 	require.Nil(t, read)
-	require.Error(t, err)
-	require.NoError(t, log.Close())
+	apiErr := err.(api.ErrOffsetOutOfRange)
+	require.Equal(t, uint64(1), apiErr.Offset)
 }
 
 func testInitExisting(t *testing.T, o *Log) {
@@ -83,7 +82,6 @@ func testInitExisting(t *testing.T, o *Log) {
 	off, err = n.HighestOffset()
 	require.NoError(t, err)
 	require.Equal(t, uint64(2), off)
-	require.NoError(t, n.Close())
 }
 
 func testReader(t *testing.T, log *Log) {
@@ -102,7 +100,6 @@ func testReader(t *testing.T, log *Log) {
 	err = proto.Unmarshal(b[lenWidth:], read)
 	require.NoError(t, err)
 	require.Equal(t, append.Value, read.Value)
-	require.NoError(t, log.Close())
 }
 
 func testTruncate(t *testing.T, log *Log) {
@@ -119,5 +116,4 @@ func testTruncate(t *testing.T, log *Log) {
 
 	_, err = log.Read(0)
 	require.Error(t, err)
-	require.NoError(t, log.Close())
 }
