@@ -5,13 +5,14 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/hashicorp/raft"
 	"github.com/hashicorp/serf/serf"
 )
 
 type Membership struct {
 	Config
 	handler Handler
-	serf    *serf.Serf // membershipの管理、操作を行う
+	serf    *serf.Serf
 	events  chan serf.Event
 	logger  *zap.Logger
 }
@@ -118,7 +119,11 @@ func (m *Membership) Leave() error {
 }
 
 func (m *Membership) logError(err error, msg string, member serf.Member) {
-	m.logger.Error(
+	log := m.logger.Error
+	if err == raft.ErrNotLeader {
+		log = m.logger.Debug
+	}
+	log(
 		msg,
 		zap.Error(err),
 		zap.String("name", member.Name),
