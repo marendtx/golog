@@ -21,3 +21,15 @@
   - 実際にgrpcサーバーとして動く
   - replicator、membershipを持つので、他agentとの協働、複製が行える。
   - testでは、各agentにダミクラを用意し、期待したレスポンスを返すか？というシナリオをチェックしている。
+
+# raftとdistributedについて
+
+- raftは、主に以下の構成からなる。
+  - StreamLayer。raftでの通信を可能にするレイヤー。基本的に生のTCPのクラサバ。
+  - logStore。ログ。DBを例にすると、コミットログ。
+  - FSM。状態。DBを例にすると、DBそのもの。
+    - このリポジトリでは、ログの複製を目的としていて、logStoreと混合されてしまうところがややこしい。
+- distributedは、以下の役割を持つ。
+  - membershipでJoin、Leaveした時のハンドラ。Raftにいろいろと任せている。
+  - gRPC serverのハンドラ。ログのcommit、appendの実体。
+- 構成は、agent -> server・membership -> distributed -> segment, store, index, log
